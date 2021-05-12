@@ -22,6 +22,15 @@ def create_app(config_class=Config):
         # this is needed if client accesses api (on different domain or port). Dont use on PROD.
         CORS(app)
 
+        from app.errors import bp as errors_bp
+        app.register_blueprint(errors_bp)
+        
+        from app.email import bp as email_bp
+        app.register_blueprint(email_bp)
+
+        from app.auth import bp as auth_bp
+        app.register_blueprint(auth_bp, url_prefix='/api')
+
         from app.main import bp as main_bp
         app.register_blueprint(main_bp, url_prefix='/api')
 
