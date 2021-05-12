@@ -69,18 +69,4 @@ def send_forgotpwd_email(user):
         send_admin=False)
 
 
-# Send confirm email
-def send_confirm_email(user):
-    token = user.get_temp_token(
-        expires_in=current_app.config['CONFIRM_EMAIL_TOKEN_EXPIRE']
-    )
-    recipients = [user.email]
-    return send_email(
-        recipients=recipients,
-        subject='Confirm your email from Indian Matrimonial',
-        text_body=render_template('email_confirm.txt',
-                                  user=user, token=token),
-        html_body=render_template('email_confirm.html',
-                                  user=user, token=token),
-        send_admin=False)
 

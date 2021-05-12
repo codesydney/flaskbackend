@@ -33,7 +33,7 @@ def get_token():
     return payload
 
 
-# revoke a token immediately .. eg when user logs out
+# expire token immediately
 @bp.route('/tokens', methods=['DELETE'])
 @token_auth.login_required
 def revoke_token():
