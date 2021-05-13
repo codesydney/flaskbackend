@@ -30,6 +30,58 @@ class PaginatedAPIMixin(object):
         return data
 
 
+class Customer(db.Model):
+    __tablename__ = 'customer'
+    id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(50), nullable=False)
+    last_name = db.Column(db.String(50), nullable=False)
+    phone = db.Column(db.String(20))
+    address = db.Column(db.String(500))
+    user_id = db.Column(db.Integer, db.ForeignKey(
+        'user.id', ondelete='CASCADE'), nullable=False)
+    job = db.relationship(
+        "Job", backref="customer", lazy="dynamic")
+    update_by = db.Column(db.String(30), nullable=False)
+    update_date = db.Column(
+        db.DateTime, default=datetime.utcnow, nullable=False)
+    create_date = db.Column(
+        db.DateTime, default=datetime.utcnow, nullable=False)
+
+    def to_dict(self):
+        data = {
+            'id': self.id,
+            'email': self.user.email,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'phone': self.phone,
+            'address': self.address,
+            'last_login': self.user.last_login.isoformat() + 'Z' if self.user.last_login else None,
+            'current': self.user.current,
+            'role': self.user.role.to_dict(),
+        }
+        return data
+
+    def from_dict(self, data, update_by='sys user', new_user=False):
+        if new_user:
+            user = User(email=data['email'].lower())
+            user.set_password(data['password'])
+            user.role_id = data['role_id']
+            self.user = user
+        else:
+            if 'password' in data and data['password'] is not None:
+                self.user.set_password(data['password'])
+        for key in data:
+            if data[key] is not None and key not in ['email', 'password', 'role_id']:
+                setattr(self, key, data[key])
+        self.user.update_by = update_by
+        self.user.update_date = datetime.utcnow()
+        self.update_by = update_by
+        self.update_date = datetime.utcnow()
+
+    def __repr__(self):
+        return '<Customer {}>'.format(self.name)
+
+
 class User(db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
@@ -37,6 +89,9 @@ class User(db.Model):
     password_hash = db.Column(db.String(100), nullable=False)
     token = db.Column(db.String(140), index=True, unique=True)
     token_expiration = db.Column(db.DateTime)
+    customer = db.relationship(
+        "Customer", uselist=False, foreign_keys=[Customer.user_id],
+        backref="user", passive_deletes=True)
     last_login = db.Column(db.DateTime)
     current = db.Column(db.Boolean, default=True, nullable=False)
     role_id = db.Column(db.Integer, db.ForeignKey(
@@ -166,8 +221,6 @@ class Job(PaginatedAPIMixin, db.Model):
     description = db.Column(db.String(100), nullable=False)
     job_status_id = db.Column(db.Integer, db.ForeignKey(
         'job_status.id'), nullable=False)
-    tradesperson_id = db.Column(db.Integer, db.ForeignKey(
-        'tradesperson.id'), nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey(
         'customer.id'), nullable=False)
     update_by = db.Column(db.String(30), nullable=False)
@@ -181,7 +234,6 @@ class Job(PaginatedAPIMixin, db.Model):
             'id': self.id,
             'name': self.name,
             'job_status': self.job_status.to_dict(),
-            'tradesperson': self.tradesperson.to_dict(),
             'customer': self.customer.to_dict(),
             'inventory_id': [i.to_dict() for i in self.inventory.all()]
         }
