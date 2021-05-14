@@ -1,0 +1,669 @@
+openapi: 3.0.0
+info:
+  title: TasksTech
+  description: Flask API for TasksTech
+  version: 2.0.0
+servers:
+  - url: 'https://taskstech2.pythonanywhere.com/api/v1'
+  #- url: 'http://localhost:5000/api/v1'
+tags:
+  - name: tokens
+    description: Authentication
+  - name: users
+    description: Users
+  - name: inventory
+    description: Inventory
+  - name: job
+    description: Job  
+  - name: forgot password
+    description: Forgot Password
+paths:
+  /tokens:
+    post:
+      tags:
+        - tokens
+      summary: 'User login returns token (BasicAuth)'
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '401':
+          $ref: '#/components/responses/401'
+      security:
+        - basicAuth: []
+    delete:
+      tags:
+        - tokens
+      summary: 'Revoke token (TokenAuth)'
+      responses:
+        '204':
+          $ref: '#/components/responses/204'
+        '401':
+          $ref: '#/components/responses/401'
+      security:
+        - bearerAuth: []
+  '/users/customer':
+    post:
+      tags:
+        - users
+      summary: 'Add new customer (TokenAuth - tradesperson)'
+      requestBody:
+        description: 'Fields needed to create new customer'
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerPost'
+      security:
+        - bearerAuth: []  
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+  '/users/customer/{id}':
+    put:
+      tags:
+        - users
+      summary: 'Update customer details (TokenAuth - tradesperson)'
+      parameters:
+        - in: path
+          name: id
+          schema: 
+            type: integer
+          required: true
+          description: 'customer id (not user id)'
+      requestBody:
+        description: 'Only include the fields you want to update'
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerPut'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+  '/users/tradesperson':
+    post:
+      tags:
+        - users
+      summary: 'Add new tradesperson'
+      requestBody:
+        description: 'Fields needed to create new tradesperson'
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TradespersonPost'
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '400':
+          $ref: '#/components/responses/400'
+  '/users/tradesperson/{id}':
+    put:
+      tags:
+        - users
+      summary: 'Update tradesperson details (TokenAuth tradesperson)'
+      parameters:
+        - in: path
+          name: id
+          schema: 
+            type: integer
+          required: true
+          description: 'tradesperson id (not user id)'
+      requestBody:
+        description: 'Only include the fields you want to update'
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TradespersonPut'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+  '/users/{id}':
+    get:
+      tags:
+        - users
+      summary: 'Get one user details (TokenAuth tradesperson)'
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: 'user id'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '404':
+          $ref: '#/components/responses/404'
+  '/forgot_password/{email}':
+    post:
+      tags:
+        - forgot password
+      summary: 'Send email to user to reset their password'
+      parameters:
+        - in: path
+          name: email
+          schema:
+            type: string
+          required: true
+          description: "User's email to send forgot password link to"
+      responses:
+        '204':
+          $ref: '#/components/responses/204'
+        '400':
+          description: "Email doesn't exist"
+        '502':
+          description: 'Error, unable to send email'
+  '/reset_password/{token}':
+    post:
+      tags:
+        - forgot password
+      summary: 'User change password'
+      parameters:
+        - in: path
+          name: token
+          schema:
+            type: string
+          required: true
+          description: Token that was generated in forgot password
+      requestBody:
+        description: New password
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPwd'
+      responses:
+        '204':
+          $ref: '#/components/responses/204'
+        '401':
+          $ref: '#/components/responses/401'
+  '/inventory':
+    post:
+      tags:
+        - inventory
+      summary: 'Add new inventory (TokenAuth tradesperson)'
+      requestBody:
+        description: 'Fields needed to create inventory'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryPost'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+    get:
+      tags:
+        - inventory
+      summary: 'Get all inventory (TokenAuth tradesperson)'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '401':
+          $ref: '#/components/responses/401'
+  '/inventory/{id}':
+    put:
+      tags:
+        - inventory
+      summary: 'Update inventory (TokenAuth tradesperson)'
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: 'inventory id'
+      requestBody:
+        description: 'Only include the fields you want to update'
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryPut'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+    get:
+      tags:
+        - inventory
+      summary: 'Get one inventory (TokenAuth tradesperson)'
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: 'inventory id'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+    delete:
+      tags:
+        - inventory
+      summary: 'Delete inventory (TokenAuth tradesperson)'
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: 'inventory id'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+  '/job':
+    post:
+      tags:
+        - job
+      summary: 'Add new job (TokenAuth tradesperson)'
+      requestBody:
+        description: 'Fields needed to create job'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobPost'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+    get:
+      tags:
+        - job
+      summary: 'Get all jobs under the tradesperson (TokenAuth tradesperson)'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '401':
+          $ref: '#/components/responses/401'  
+  '/job/{id}':
+    put:
+      tags:
+        - job
+      summary: 'Update job (TokenAuth tradesperson)'
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: 'job id'
+      requestBody:
+        description: 'Only include the fields you want to update'
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobPut'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+    delete:
+      tags:
+        - job
+      summary: 'Delete job (TokenAuth tradesperson)'
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: 'job id'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+    get:
+      tags:
+        - job
+      summary: 'Get one job (TokenAuth tradesperson)'
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: 'job id'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+  '/job_status':
+    get:
+      tags:
+        - job
+      summary: 'Get list of job status'
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    200:
+      description: 'Ok'
+    204:
+      description: 'Ok - No Content'
+    400:
+      description: 'Bad request'
+    401:
+      description: 'Unauthorised'
+    404:
+      description: 'Not found'
+  schemas:
+    UserPagination:
+      properties:
+        _links:
+          type: object
+          properties:
+            next:
+              type: string
+            prev:
+              type: string
+            self:
+              type: string
+        _meta:
+          type: object
+          properties:
+            page:
+              type: integer
+            per_page:
+              type: integer
+            total_items:
+              type: integer
+            total_pages:
+              type: integer
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              email:
+                type: string
+              first_name:
+                type: string
+              last_name:
+                type: string
+              phone:
+                type: string
+              company:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+              last_login:
+                type: string
+              current:
+                type: boolean
+              role:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+    CustomerPost:
+      required:
+      - email
+      - password
+      - first_name
+      - last_name
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+    CustomerPut:
+      properties:
+        password:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        current:
+          type: boolean
+    TradespersonPost:
+      required:
+      - email
+      - password
+      - first_name
+      - last_name
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        description:
+          type: string
+        phone:
+          type: string
+        category_id:
+          type: array
+          items:
+            type: integer
+    TradespersonPut:
+      properties:
+        password:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        description:
+          type: string
+        phone:
+          type: string
+        category_id:
+          type: array
+          items:
+            type: integer
+        current:
+          type: boolean
+    ResetPwd:
+      properties:
+        password:
+          type: string
+    InventoryPost:
+      required:
+      - name
+      - description
+      - tradesperson_id
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 30
+        description:
+          type: string
+          minLength: 1
+          maxLength: 100
+        supplier:
+          type: string
+          maxLength: 30
+        model_no:
+          type: string
+          maxLength: 30
+        serial_no:
+          type: string
+          maxLength: 30
+        price:
+          type: number
+        notes:
+          type: string
+          maxLength: 500
+        tradesperson_id:
+          type: integer
+    InventoryPut:
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 30
+        description:
+          type: string
+          minLength: 1
+          maxLength: 100
+        supplier:
+          type: string
+          maxLength: 30
+        model_no:
+          type: string
+          maxLength: 30
+        serial_no:
+          type: string
+          maxLength: 30
+        price:
+          type: number
+        notes:
+          type: string
+          maxLength: 500
+        tradesperson_id:
+          type: integer
+    JobPost:
+      required:
+      - name
+      - description
+      - job_status_id
+      - tradesperson_id
+      - customer_id
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 30
+        description:
+          type: string
+          minLength: 1
+          maxLength: 100
+        job_status_id:
+          type: integer
+        tradesperson_id:
+          type: integer
+        customer_id:
+          type: integer
+        inventory_id:
+          type: array
+          items:
+            type: integer
+    JobPut:
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 30
+        description:
+          type: string
+          minLength: 1
+          maxLength: 100
+        job_status_id:
+          type: integer
+        tradesperson_id:
+          type: integer
+        customer_id:
+          type: integer
+        inventory_id:
+          type: array
+          items:
+            type: integer
+        
+      

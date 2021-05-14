@@ -4,14 +4,26 @@ from flask_migrate import Migrate
 from flask_moment import Moment
 from config import Config
 from flask_cors import CORS
+from flask_swagger_ui import get_swaggerui_blueprint
 
 
 db = SQLAlchemy()
 migrate = Migrate(compare_type=True)
 moment = Moment()
 
+# swagger specific
+SWAGGER_URL = '/swagger'
+API_URL = '/static/swagger/swagger.json'
+SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
+    SWAGGER_URL,
+    API_URL,
+    config={
+        'app_name': "MyApp"
+    }
+)
+
 def create_app(config_class=Config):
-    app = Flask(__name__, static_folder='../../dist/spa', static_url_path='/')
+    app = Flask(__name__)
     app.config.from_object(Config)
 
     with app.app_context():
@@ -33,5 +45,7 @@ def create_app(config_class=Config):
 
         from app.main import bp as main_bp
         app.register_blueprint(main_bp, url_prefix='/api')
+
+        app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix=SWAGGER_URL)
 
     return app
