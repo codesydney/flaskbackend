@@ -34,3 +34,4 @@ Flask API - skeleton to get started with creating API's in Flask
 5. Forgot and reset password
 6. Uses Sendgrid to send email
 7. Swagger - need to manually edit YAML file (export to JSON)
+* Access swagger via /swagger
