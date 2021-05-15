@@ -43,8 +43,11 @@ def create_app(config_class=Config):
         from app.auth import bp as auth_bp
         app.register_blueprint(auth_bp, url_prefix='/api')
 
-        from app.main import bp as main_bp
-        app.register_blueprint(main_bp, url_prefix='/api')
+        from app.user import bp as user_bp
+        app.register_blueprint(user_bp, url_prefix='/api')
+
+        from app.inventory import bp as inventory_bp
+        app.register_blueprint(inventory_bp, url_prefix='/api')
 
         app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix=SWAGGER_URL)
 

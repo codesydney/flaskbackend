@@ -1,0 +1,11 @@
+Dear user
+
+Click the link below to reset your password.
+
+https://taskstech.herokuapp.com/#/reset-password/{{ token }}
+
+If you did not request a password reset, then please ignore this message.
+
+Best Regards
+TasksTech team
+www.TasksTech.com

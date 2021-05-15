@@ -52,7 +52,7 @@ def forgot_password(email):
         else:
             return error_response(502, 'unable to send email')
     else:
-        return error_response(400, "email doesn't exist")
+        return bad_request("email doesn't exist")
 
 
 @bp.route('/reset_password/<token>', methods=['POST'])
@@ -60,7 +60,9 @@ def reset_password(token):
     user = User.verify_temp_token(token)
     if not user:
         return error_response(401, 'token is not valid')
-    data = request.body_params.dict()
+    data = request.get_json() or {}
+    if 'password' not in data:
+        return bad_request("password is missing")
     user.set_password(data['password'])
     db.session.add(user)
     db.session.commit()

@@ -19,9 +19,9 @@ def send_email(recipients, subject, text_body, html_body, send_admin=False):
         
     message.subject = Subject(subject)
     message.from_email = From(
-        current_app.config['MAIL_FROM'], 'Indian Matrimony')
+        current_app.config['MAIL_FROM'], 'My site')
     message.reply_to = ReplyTo(
-        current_app.config['MAIL_REPLY_TO'], 'Indian Matrimony Reply')
+        current_app.config['MAIL_REPLY_TO'], 'My Site Reply')
 
     message.content = [
         Content('text/html', html_body),
@@ -45,7 +45,7 @@ def send_reg_email(user):
     recipients = [user.email]
     return send_email(
         recipients=recipients,
-        subject='Welcome to Indian Matrimonial Family!',
+        subject='Welcome to ...',
         text_body=render_template('email_reg.txt',
                                   user=user),
         html_body=render_template('email_reg.html',
@@ -61,7 +61,7 @@ def send_forgotpwd_email(user):
     recipients = [user.email]
     return send_email(
         recipients=recipients,
-        subject='Reset your password from Indian Matrimonial',
+        subject='Reset your password from ...',
         text_body=render_template('email_pwdreset.txt',
                                   user=user, token=token),
         html_body=render_template('email_pwdreset.html',

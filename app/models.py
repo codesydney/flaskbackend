@@ -30,7 +30,7 @@ class PaginatedAPIMixin(object):
         return data
 
 
-class Customer(db.Model):
+class Customer(PaginatedAPIMixin, db.Model):
     __tablename__ = 'customer'
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(50), nullable=False)
@@ -39,8 +39,6 @@ class Customer(db.Model):
     address = db.Column(db.String(500))
     user_id = db.Column(db.Integer, db.ForeignKey(
         'user.id', ondelete='CASCADE'), nullable=False)
-    job = db.relationship(
-        "Job", backref="customer", lazy="dynamic")
     update_by = db.Column(db.String(30), nullable=False)
     update_date = db.Column(
         db.DateTime, default=datetime.utcnow, nullable=False)
@@ -49,7 +47,7 @@ class Customer(db.Model):
 
     def to_dict(self):
         data = {
-            'id': self.id,
+            'user_id': self.user.id,
             'email': self.user.email,
             'first_name': self.first_name,
             'last_name': self.last_name,
@@ -61,7 +59,7 @@ class Customer(db.Model):
         }
         return data
 
-    def from_dict(self, data, update_by='sys user', new_user=False):
+    def from_dict(self, data, update_by='sys_user', new_user=False):
         if new_user:
             user = User(email=data['email'].lower())
             user.set_password(data['password'])
@@ -73,8 +71,6 @@ class Customer(db.Model):
         for key in data:
             if data[key] is not None and key not in ['email', 'password', 'role_id']:
                 setattr(self, key, data[key])
-        self.user.update_by = update_by
-        self.user.update_date = datetime.utcnow()
         self.update_by = update_by
         self.update_date = datetime.utcnow()
 
@@ -86,7 +82,7 @@ class User(db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(30), index=True, unique=True, nullable=False)
-    password_hash = db.Column(db.String(100), nullable=False)
+    password_hash = db.Column(db.String(150), nullable=False)
     token = db.Column(db.String(140), index=True, unique=True)
     token_expiration = db.Column(db.DateTime)
     customer = db.relationship(
@@ -96,6 +92,7 @@ class User(db.Model):
     current = db.Column(db.Boolean, default=True, nullable=False)
     role_id = db.Column(db.Integer, db.ForeignKey(
         'role.id'), nullable=False)
+    update_by = db.Column(db.String(30), nullable=False)
     update_date = db.Column(
         db.DateTime, default=datetime.utcnow, nullable=False)
     create_date = db.Column(
@@ -156,7 +153,7 @@ class User(db.Model):
         return user
 
     @ staticmethod
-    def verify_token(token):
+    def verify_temp_token(token):
         try:
             id = jwt.decode(token, current_app.config['SECRET_KEY'],
                             algorithms=['HS256'])['reset_password']
@@ -194,35 +191,16 @@ class Role(db.Model):
         return '<Role {}>'.format(self.name)
 
 
-class JobStatus(PaginatedAPIMixin, db.Model):
-    __tablename__='job_status'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(20), nullable=False)
-    job = db.relationship(
-        "Job", backref="job_status", lazy="dynamic")
-    update_date = db.Column(
-        db.DateTime, default=datetime.utcnow, nullable=False)
-
-    def to_dict(self):
-        data = {
-            'id': self.id,
-            'name': self.name
-        }
-        return data
-
-    def __repr__(self):
-        return '<JobStatus {}>'.format(self.name)
-
-
-class Job(PaginatedAPIMixin, db.Model):
-    __tablename__='job'
+class Inventory(PaginatedAPIMixin, db.Model):
+    __tablename__='inventory'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30), nullable=False)
-    description = db.Column(db.String(100), nullable=False)
-    job_status_id = db.Column(db.Integer, db.ForeignKey(
-        'job_status.id'), nullable=False)
-    customer_id = db.Column(db.Integer, db.ForeignKey(
-        'customer.id'), nullable=False)
+    description = db.Column(db.String(100))
+    supplier = db.Column(db.String(30))
+    model_no = db.Column(db.String(30))
+    serial_no = db.Column(db.String(30))
+    price = db.Column(db.Numeric(10,2))
+    notes = db.Column(db.String(500))
     update_by = db.Column(db.String(30), nullable=False)
     update_date = db.Column(
         db.DateTime, default=datetime.utcnow, nullable=False)
@@ -233,29 +211,23 @@ class Job(PaginatedAPIMixin, db.Model):
         data = {
             'id': self.id,
             'name': self.name,
-            'job_status': self.job_status.to_dict(),
-            'customer': self.customer.to_dict(),
-            'inventory_id': [i.to_dict() for i in self.inventory.all()]
+            'description': self.description,
+            'supplier': self.supplier,
+            'model_no': self.model_no,
+            'serial_no': self.serial_no,
+            'price': str(self.price),
+            'notes': self.notes
         }
         return data
 
     def from_dict(self, data, update_by='sys user'):
         for key in data:
-            if data[key] is not None and key not in ['inventory_id']:
+            if data[key]:
                 if hasattr(self, key):
                     setattr(self, key, data[key])
-
-        inventory = []
-        if 'inventory_id' in data and data['inventory_id'] is not None:
-            for iid in data['inventory_id']:
-                inventory.append(Inventory.query.filter_by(id=int(iid)).first())
-        if len(inventory) > 0:
-            self.inventory = []
-            for i in inventory:
-                self.inventory.append(i)
 
         self.update_by = update_by
         self.update_date = datetime.utcnow()
 
     def __repr__(self):
-        return '<Job {}>'.format(self.name)
+        return '<Inventory {}>'.format(self.name)
