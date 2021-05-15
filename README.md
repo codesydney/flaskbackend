@@ -6,6 +6,7 @@ Flask API - skeleton to get started with creating API's in Flask
 
 1. Flask
 2. MySQL
+3. Sendgrid
 
 ### Instructions
 
@@ -26,6 +27,10 @@ Flask API - skeleton to get started with creating API's in Flask
 
 ### Features
 
-1. Create, update User
-2. Create, update, delete, get Customer - 1:1 linked to User
-3. Create, update, delete, get Inventory - Not linked to any table
+1. Endpoint to create User (admin)
+2. Endpoints to create, update, delete, Customer - 1:1 linked to User
+3. Endpoints to create, update, delete, get Inventory - Not linked to any other table
+4. User login
+5. Forgot and reset password
+6. Uses Sendgrid to send email
+7. Swagger - need to manually edit YAML file (export to JSON)
