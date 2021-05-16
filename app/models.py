@@ -152,21 +152,23 @@ class User(db.Model):
             return None
         return user
 
-    @ staticmethod
+    def get_temp_token(self, expires_in):
+        return jwt.encode({'user_id': self.id,
+            'exp': datetime.utcnow() + timedelta(seconds=expires_in)},
+            current_app.config['SECRET_KEY'],
+            algorithm='HS256')
+
+    @staticmethod
     def verify_temp_token(token):
         try:
-            id = jwt.decode(token, current_app.config['SECRET_KEY'],
-                            algorithms=['HS256'])['reset_password']
-        except Exception:
-            return None
-        return User.query.get(id)
-
-    def get_temp_token(self, expires_in):
-        return jwt.encode({'reset_password': self.id,
-                           'exp': datetime.utcnow() +
-                           timedelta(seconds=expires_in)},
-                          current_app.config['SECRET_KEY'],
-                          algorithm='HS256')
+            payload = jwt.decode(token, current_app.config['SECRET_KEY'], 
+                algorithms=['HS256'])
+        # package will automatically check "exp" if expired
+        except jwt.ExpiredSignatureError:
+            return
+        except:
+            return
+        return User.query.get(payload['user_id'])
 
     def __repr__(self):
         return '<User {}>'.format(self.email)
