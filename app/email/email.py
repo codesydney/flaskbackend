@@ -1,28 +1,27 @@
 from flask import render_template, current_app
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Content, Personalization, Email, From, Bcc, Subject, ReplyTo
+from sendgrid.helpers.mail import Mail, From, To, Bcc, \
+    Subject, Content, ReplyTo
 
 
 # Generic method to send email via Sendgrid
 def send_email(recipients, subject, text_body, html_body, send_admin=False):
     message = Mail()
-
-    # personalization is used so you can't see other people sent email
+    msg_to = []
     for r in recipients:
-        person = Personalization()
-        person.add_to(Email(r))
-        message.add_personalization(person)
+        msg_to.append(To(r))
+    message.to = msg_to
 
     if send_admin:
         admin_list = current_app.config['MAIL_ADMINS'].split(';')
-        message.bcc = [Bcc(a) for a in admin_list]
-        
-    message.subject = Subject(subject)
-    message.from_email = From(
-        current_app.config['MAIL_FROM'], 'My site')
-    message.reply_to = ReplyTo(
-        current_app.config['MAIL_REPLY_TO'], 'My Site Reply')
+        msg_bcc = []
+        for a in admin_list:
+            msg_bcc.append(Bcc(a))
+        message.bcc = msg_bcc
 
+    message.subject = Subject(subject)
+    message.from_email = From(current_app.config['MAIL_FROM'], 'Indian Matrimonial')
+    message.reply_to = ReplyTo(current_app.config['MAIL_REPLY_TO'], 'Indian Matrimonial')
     message.content = [
         Content('text/html', html_body),
         Content('text/txt', text_body)
@@ -31,7 +30,7 @@ def send_email(recipients, subject, text_body, html_body, send_admin=False):
     try:
         sg = SendGridAPIClient(current_app.config['SENDGRID_API_KEY'])
         response = sg.send(message)
-        print(response.status_code)
+        print(response.status_code),
         print(response.body)
         print(response.headers)
         return True
